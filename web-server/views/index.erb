@@ -8,7 +8,8 @@
           <span class="time">10:02:03</span>
         </p>
         <div id="gia-graph" class="well">
-
+          <svg class="chart" width="300" height="300">
+          </svg>
         </div>
       </div>
     </div>
@@ -22,7 +23,8 @@
           <span class="time">10:02:03</span>
         </p>
         <div id="cgia-graph" class="well">
-          
+          <svg class="chart" width="300" height="300">
+          </svg>
         </div>
       </div>
     </div>
@@ -35,7 +37,8 @@
           <span class="label label-success">Finished</span>
           <span class="time">10:02:03</span></p>
         <div id="pgia-graph" class="well">
-          
+          <svg class="chart" width="300" height="300">
+          </svg>
         </div>
       </div>
     </div>
@@ -43,13 +46,53 @@
 </div>
 
 <script>
-  refresh_panel = function(panel, data) {
-    var panel_status_label = panel.find("p span.label");
+
+  refresh_timer_interval_id = null;
+
+  refresh_panel_time = function(panel, data) {
     var panel_status_text = panel.find("p span.time");
 
-    console.log(panel_status_text);
+    var duration = null;
 
-    panel_status_text.text("New Time");
+    // Calculate the duration to show.
+    if (data.finished) {
+      // Calculate finished_time - start_time.
+      var finished_time = Date.parse(data.finished_time);
+      var start_time = Date.parse(data.start_time);
+
+      duration = finished_time - start_time;
+    } else {
+      // Calculate current time - start_time
+      var current_time = Date.now();
+      var start_time = Date.parse(data.start_time);
+
+      duration = current_time - start_time;
+    }
+
+    var seconds = Math.floor((duration / 1000) % 60);
+    var minutes = Math.floor((duration / 1000 / 60) % 60);
+    var hours = Math.floor((duration / 1000 / 60 / 60));
+
+    panel_status_text.text(hours + ":" + minutes + ":" + seconds);
+  }
+
+  refresh_times = function() {
+    var gia_panel = $("#gia");
+    refresh_panel_time(gia_panel, gia);
+
+    var cgia_panel = $("#cgia");
+    refresh_panel_time(cgia_panel, cgia);
+
+    var pgia_panel = $("#pgia");
+    refresh_panel_time(pgia_panel, pgia);
+  };
+
+  refresh_panel = function(panel_id, panel, data) {
+    var panel_status_label = panel.find("p span.label");
+
+    // Refresh the status label and running times.
+
+    refresh_panel_time(panel, data);
 
     panel_status_label.removeClass("label-success label-default");
 
@@ -60,6 +103,58 @@
       panel_status_label.text("Running");
       panel_status_label.addClass("label-default");
     }
+
+    // Refresh the graph.
+    var graph = d3.select("#" + panel_id + " svg");
+    console.log(graph);
+
+    var xmin = 0;
+    var xmax = model.metric_maximums[model.metrics[0]];
+    var ymin = 0;
+    var ymax = model.metric_maximums[model.metrics[1]];
+
+    var graph_width = parseInt(graph.style("width"), 10);
+    var graph_height = parseInt(graph.style("height"), 10);
+    var x_padding = 50;
+    var y_padding = 50;
+
+    var xscaler = d3.scale.linear()
+                          .domain([xmin, xmax])
+                          .range([x_padding, graph_width - x_padding])
+                          .nice();
+    var yscaler = d3.scale.linear()
+                          .domain([ymin, ymax])
+                          .range([graph_height - y_padding, y_padding])
+                          .nice();
+
+    var x_axis_function = d3.svg.axis()
+                                .scale(xscaler)
+                                .orient("bottom");
+    var y_axis_function = d3.svg.axis()
+                                .scale(yscaler)
+                                .orient("left");
+
+    // Find the x-axis of the graph.
+    var x_axis = graph.select("g.x-axis");
+    if (x_axis.empty()) {
+      x_axis = graph.append("g")
+                    .classed("x-axis", true);
+    }
+
+    // Apply the axis function to it.
+    x_axis.attr("transform", "translate(0,"+(graph_height - y_padding) + ")")
+          .call(x_axis_function);
+
+    // Find the y-axis of the graph.
+    var y_axis = graph.select("g.y-axis");
+    if (y_axis.empty()) {
+      y_axis = graph.append("g")
+                    .classed("y-axis", true);
+    }
+
+    // Apply the axis function to it.
+    y_axis.attr("transform", "translate(" + x_padding + ",0)")
+          .call(y_axis_function);
   };
 
   refresh = function(data) {
@@ -78,19 +173,19 @@
     gia = data.gia;
     var gia_panel = $("#gia");
 
-    refresh_panel(gia_panel, gia);
+    refresh_panel("gia", gia_panel, gia);
 
     // Update the CGIA section.
     cgia = data.cgia;
     var cgia_panel = $("#cgia");
 
-    refresh_panel(cgia_panel, cgia);
+    refresh_panel("cgia", cgia_panel, cgia);
 
     // Update the PGIA section.
     pgia = data.pgia;
     var pgia_panel = $("#pgia");
 
-    refresh_panel(pgia_panel, pgia);
+    refresh_panel("pgia", pgia_panel, pgia);
   };
 
   $(document).ready(function() {
@@ -122,6 +217,12 @@
         case "refresh":
           console.log("Received refresh data from server.");
           refresh(decoded_message.body);
+
+          if (!refresh_timer_interval_id) {
+            refresh_timer_interval_id = window.setInterval(refresh_times, 1000);
+          }
+
+          break;
       }
     };
   });
