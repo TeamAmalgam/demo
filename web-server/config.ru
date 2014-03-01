@@ -1,4 +1,3 @@
-require 'rubygems'
 require 'rack/websocket'
 require 'rack/contrib'
 
