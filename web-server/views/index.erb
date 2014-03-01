@@ -1,1 +1,128 @@
-<h1>Testing</h1>
+<div class="row" style="height:400px">
+  <div id="gia" class="col-md-4">
+    <div class="panel panel-default">
+      <div class="panel-heading"><h3>GIA</h3></div>
+      <div class="panel-body">
+        <p>
+          <span class="label label-default">Running</span>
+          <span class="time">10:02:03</span>
+        </p>
+        <div id="gia-graph" class="well">
+
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="cgia" class="col-md-4">
+    <div class="panel panel-default">
+      <div class="panel-heading"><h3>CGIA</h3></div>
+      <div class="panel-body">
+        <p>
+          <span class="label label-default">Running</span>
+          <span class="time">10:02:03</span>
+        </p>
+        <div id="cgia-graph" class="well">
+          
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="pgia" class="col-md-4">
+    <div class="panel panel-default">
+      <div class="panel-heading"><h3>PGIA</h3></div>
+      <div class="panel-body">
+        <p>
+          <span class="label label-success">Finished</span>
+          <span class="time">10:02:03</span></p>
+        <div id="pgia-graph" class="well">
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  refresh_panel = function(panel, data) {
+    var panel_status_label = panel.find("p span.label");
+    var panel_status_text = panel.find("p span.time");
+
+    console.log(panel_status_text);
+
+    panel_status_text.text("New Time");
+
+    panel_status_label.removeClass("label-success label-default");
+
+    if (data.finished) {
+      panel_status_label.text("Finished");
+      panel_status_label.addClass("label-success");
+    } else {
+      panel_status_label.text("Running");
+      panel_status_label.addClass("label-default");
+    }
+  };
+
+  refresh = function(data) {
+    console.log("refreshing");
+
+    // Update the global model information.
+    model = {
+      model_name: data.model_name,
+      total_pareto_points: data.total_pareto_points,
+      metrics: data.metrics,
+      metric_directions: data.metric_directions,
+      metric_maximums: data.metric_maximums
+    };
+
+    // Update the GIA section.
+    gia = data.gia;
+    var gia_panel = $("#gia");
+
+    refresh_panel(gia_panel, gia);
+
+    // Update the CGIA section.
+    cgia = data.cgia;
+    var cgia_panel = $("#cgia");
+
+    refresh_panel(cgia_panel, cgia);
+
+    // Update the PGIA section.
+    pgia = data.pgia;
+    var pgia_panel = $("#pgia");
+
+    refresh_panel(pgia_panel, pgia);
+  };
+
+  $(document).ready(function() {
+    socket = new WebSocket("ws://localhost:9393/ws");
+
+    socket.onerror = function(event) {
+      console.log("Connection to server failed.");
+    };
+
+    socket.onopen = function (event) {
+      console.log("Connection to server established.");
+
+      // Send the refresh command to the server to get the
+      // entire state of the demo.
+
+      var command = {
+        command: "refresh"
+      };
+
+      socket.send(JSON.stringify(command));
+    };
+
+    socket.onmessage = function(event) {
+      console.log("Message received.");
+      console.log(event.data);
+
+      var decoded_message = JSON.parse(event.data);
+      switch(decoded_message.command) {
+        case "refresh":
+          console.log("Received refresh data from server.");
+          refresh(decoded_message.body);
+      }
+    };
+  });
+</script>

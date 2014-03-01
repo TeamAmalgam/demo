@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <title><%= @title %></title>
-    <%= stylesheet "/css/bootstrap.min.css" %>
+    <%= stylesheet "//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" %>
     <%= stylesheet "/css/styles.css" %>
     <!--[if lt IE 9]>
       <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
@@ -14,29 +14,31 @@
   </head>
   <body>
     <% if settings.development? %>
-    <div class="navbar navbar-fixed-top">
+    <div class="navbar navbar-fixed-top navbar-default">
     <% else %>
     <div class="navbar navbar-inverse navbar-fixed-top">
     <% end %>
-      <div class="navbar-inner">
-        <div class="container">
-          <a class="brand" href="/">Amalgam Demo</a>
-          <div class="nav-collapse collapse">
-            <ul class="nav">
-              <% if settings.development? %>
-                <li><span class="label label-important" style="margin:12px 0 10px">DEVELOPMENT</span></li>
-              <% end %>
-            </ul>
-          </div>
+      <div class="container">
+        <a class="navbar-brand" href="/">Amalgam Demo</a>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <% if settings.development? %>
+              <li>
+                <span class="label label-danger">
+                  DEVELOPMENT
+                </span>
+              </li>
+            <% end %>
+          </ul>
         </div>
       </div>
     </div>
 
-    <div class="container">
+    <div class="container-fluid">
       <%= yield %>
     </div>
 
     <script src="/js/d3.v3.min.js"></script>
-    <script src="/js/bootstrap.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
   </body>
 </html>
