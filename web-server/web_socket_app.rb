@@ -46,8 +46,8 @@ class WebSocketApp < Rack::WebSocket::Application
                     "performance" => "max"
                 },
                 "metric_maximums" => {
-                    "cost" => 100,
-                    "performance" => 100
+                    "cost" => 20,
+                    "performance" => 20
                 },
                 "gia" => {
                     "start_time" => Time.now(),
