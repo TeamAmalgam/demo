@@ -106,7 +106,6 @@
 
     // Refresh the graph.
     var graph = d3.select("#" + panel_id + " svg");
-    console.log(graph);
 
     var xmin = 0;
     var xmax = model.metric_maximums[model.metrics[0]];
@@ -243,7 +242,6 @@
 
     socket.onmessage = function(event) {
       console.log("Message received.");
-      console.log(event.data);
 
       var decoded_message = JSON.parse(event.data);
       switch(decoded_message.command) {
@@ -254,6 +252,12 @@
           if (!refresh_timer_interval_id) {
             refresh_timer_interval_id = window.setInterval(refresh_times, 1000);
           }
+
+          var refresh_command = {
+            command: "refresh"
+          };
+
+          setTimeout(socket.send.bind(socket, JSON.stringify(refresh_command)), 5000);
 
           break;
       }
