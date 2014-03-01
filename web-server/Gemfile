@@ -6,7 +6,7 @@ gem "sinatra"
 gem "rake"
 gem "thin"
 gem "rack-contrib"
-gem "em-websocket"
+gem "websocket-rack"
 
 group :development do
   gem "shotgun"

@@ -1,9 +1,19 @@
-require "./app"
-require "rack/contrib"
+require 'rubygems'
+require 'rack/websocket'
+require 'rack/contrib'
+
+require './app'
+require './web_socket_app'
 
 $stdout.sync = true
 
-use Rack::Deflater
-use Rack::StaticCache, :urls => ["/img", "/css", "/js"], :root => "public"
+map '/ws' do
+  run WebSocketApp.new
+end
 
-run App
+map '/' do
+  use Rack::Deflater
+  use Rack::StaticCache, :urls => ["/img", "/css", "/js"], :root => "public"
+
+  run App
+end
