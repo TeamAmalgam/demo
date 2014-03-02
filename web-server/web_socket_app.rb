@@ -18,6 +18,8 @@ class WebSocketApp < Rack::WebSocket::Application
                     "cost" => 11,
                     "performance" => 13
                 }
+            ],
+            "solutions" => [
             ]
         }
 
@@ -38,6 +40,8 @@ class WebSocketApp < Rack::WebSocket::Application
                     "cost" => 12,
                     "performance" => 14
                 }
+            ],
+            "solutions" => [
             ]
         }
 
@@ -62,6 +66,8 @@ class WebSocketApp < Rack::WebSocket::Application
                     "cost" => 13,
                     "performance" => 15
                 }
+            ],
+            "solutions" => [
             ]
         }
 

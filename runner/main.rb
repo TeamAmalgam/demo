@@ -37,6 +37,8 @@ Dir.mktmpdir do |dir|
         "errored" => false,
         "pareto_points_found" => 0,
         "pareto_points" => [
+        ],
+        "solutions" => [
         ]
     }
 
@@ -49,6 +51,13 @@ Dir.mktmpdir do |dir|
             match = /.*Found a solution.*\[([^\]]*)\].*/.match(line)
             if match
                 metrics = match[1].split(/,\s+/)
+                data["solutions"] << {
+                    "cost" => metrics[0],
+                    "performance" => metrics[1]
+                }
+                redis.set(algorithm, data.to_yaml)
+                redis.publish(algorithm, nil)
+                
                 puts "Found solution with metrics [#{metrics.join(", ")}]."
             end
 
