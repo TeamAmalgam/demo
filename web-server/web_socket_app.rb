@@ -96,6 +96,9 @@ class WebSocketApp < Rack::WebSocket::Application
     def on_open(env)
         close_websocket unless env['REQUEST_PATH'] == '/ws'
         puts "Client connected"
+        @redis.pubsub.subscribe("data_refreshed") do |message|
+            on_refresh
+        end
     end
 
     def on_close(env)
@@ -113,11 +116,11 @@ class WebSocketApp < Rack::WebSocket::Application
         puts "Received message: " + msg.inspect
 
         case msg["command"]
-            when "refresh" then on_refresh(env, msg)
+            when "refresh" then on_refresh
         end
     end
 
-    def on_refresh(env, msg)
+    def on_refresh
         @redis.get('sample_data') do |value|
             value = YAML.load(value)
 
