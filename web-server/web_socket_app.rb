@@ -120,8 +120,6 @@ class WebSocketApp < Rack::WebSocket::Application
     def on_refresh(env, msg)
         @redis.get('sample_data') do |value|
             value = YAML.load(value)
-            puts TEST_DATA.to_json
-            puts value.to_json
 
             send_data(value.to_json)
         end
