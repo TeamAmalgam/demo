@@ -8,6 +8,7 @@ gem "thin"
 gem "rack-contrib"
 gem "websocket-rack"
 gem "sinatra-contrib"
+gem "em-hiredis"
 
 group :development do
   gem "shotgun"

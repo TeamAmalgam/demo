@@ -242,8 +242,10 @@
 
     socket.onmessage = function(event) {
       console.log("Message received.");
+      console.log(event.data);
 
       var decoded_message = JSON.parse(event.data);
+      console.log(decoded_message);
       switch(decoded_message.command) {
         case "refresh":
           console.log("Received refresh data from server.");

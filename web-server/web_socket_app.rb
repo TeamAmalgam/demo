@@ -1,38 +1,11 @@
 require 'rack/websocket'
 require 'json'
+require 'em-hiredis'
+require 'yaml'
 
 class WebSocketApp < Rack::WebSocket::Application
 
-    def initialize(options = {})
-        super
-    end
-
-    def on_open(env)
-        close_websocket unless env['REQUEST_PATH'] == '/ws'
-        puts "Client connected"
-    end
-
-    def on_close(env)
-        puts "Client disconnected"
-    end
-
-    def on_error(env, error)
-        puts error.inspect
-        puts error.stacktrace.join('\n')
-    end
-
-    def on_message(env, msg) 
-        puts "Raw message: " + msg
-        msg = JSON.parse(msg);
-        puts "Received message: " + msg.inspect
-
-        case msg["command"]
-            when "refresh" then on_refresh(env, msg)
-        end
-    end
-
-    def on_refresh(env, msg)
-        data = {
+        TEST_DATA = {
             "command" => "refresh",
             "body" => {
                 "model_name" => "test_model.als",
@@ -109,6 +82,48 @@ class WebSocketApp < Rack::WebSocket::Application
             }
         }
 
-        send_data(data.to_json)
+    def initialize(options = {})
+        super
+        EM.next_tick{
+          @redis = EM::Hiredis.connect
+          @redis.get('sample_data') do |value|
+            puts TEST_DATA.to_yaml
+            @redis.set('sample_data', TEST_DATA.to_yaml) if value.nil?
+          end
+        }
+    end
+
+    def on_open(env)
+        close_websocket unless env['REQUEST_PATH'] == '/ws'
+        puts "Client connected"
+    end
+
+    def on_close(env)
+        puts "Client disconnected"
+    end
+
+    def on_error(env, error)
+        puts error.inspect
+        puts error.backtrace.join('\n')
+    end
+
+    def on_message(env, msg) 
+        puts "Raw message: " + msg
+        msg = JSON.parse(msg);
+        puts "Received message: " + msg.inspect
+
+        case msg["command"]
+            when "refresh" then on_refresh(env, msg)
+        end
+    end
+
+    def on_refresh(env, msg)
+        @redis.get('sample_data') do |value|
+            value = YAML.load(value)
+            puts TEST_DATA.to_json
+            puts value.to_json
+
+            send_data(value.to_json)
+        end
     end
 end
