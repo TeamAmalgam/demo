@@ -283,7 +283,7 @@
   };
 
   $(document).ready(function() {
-    socket = new WebSocket("ws://localhost:9393/ws");
+    socket = new WebSocket("ws://" + window.location.host + "/ws");
 
     socket.onerror = function(event) {
       console.log("Connection to server failed.");
