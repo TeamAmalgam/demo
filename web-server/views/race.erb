@@ -1,0 +1,152 @@
+<div class="row" style="height:400px">
+  <div id="gia" class="col-md-4">
+    <div class="panel panel-default">
+      <div class="panel-heading"><h1>GIA</h1></div>
+      <div class="panel-body">
+        <h2>
+          <span class="label label-default">Running</span>
+          <span class="time">10:02:03</span>
+        </h2>
+        <div class="progress">
+          <div class="progress-bar" role="progressbar" style="width: 60%;">
+          </div>
+        </div>
+        <div id="gia-graph" class="well">
+          <svg class="chart" width="100%" height="100%">
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="cgia" class="col-md-4">
+    <div class="panel panel-default">
+      <div class="panel-heading"><h1>CGIA</h1></div>
+      <div class="panel-body">
+        <h2>
+          <span class="label label-default">Running</span>
+          <span class="time">10:02:03</span>
+        </h2>
+        <div class="progress">
+          <div class="progress-bar" role="progressbar" style="width: 60%;">
+          </div>
+        </div>
+        <div id="cgia-graph" class="well">
+          <svg class="chart" width="100%" height="100%">
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="pgia" class="col-md-4">
+    <div class="panel panel-default">
+      <div class="panel-heading"><h1>PGIA</h1></div>
+      <div class="panel-body">
+        <h2>
+          <span class="label label-success">Finished</span>
+          <span class="time">10:02:03</span>
+        </h2>
+        <div class="progress">
+          <div class="progress-bar" role="progressbar" style="width: 60%;">
+          </div>
+        </div>
+        <div id="pgia-graph" class="well">
+          <svg class="chart" width="100%" height="100%">
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+
+  refresh_timer_interval_id = null;
+
+  refresh_times = function() {
+    var gia_panel = $("#gia");
+    refresh_panel_time(gia_panel, gia);
+
+    var cgia_panel = $("#cgia");
+    refresh_panel_time(cgia_panel, cgia);
+
+    var pgia_panel = $("#pgia");
+    refresh_panel_time(pgia_panel, pgia);
+  };
+
+
+  refresh = function(data) {
+    console.log("refreshing");
+
+    // Update the global model information.
+    model = {
+      model_name: data.model_name,
+      total_pareto_points: data.total_pareto_points,
+      metrics: data.metrics,
+      metric_directions: data.metric_directions,
+      metric_maximums: data.metric_maximums
+    };
+
+    // Update the GIA section.
+    gia = data.gia;
+    var gia_panel = $("#gia");
+
+    refresh_panel("gia", gia_panel, gia);
+
+    // Update the CGIA section.
+    cgia = data.cgia;
+    var cgia_panel = $("#cgia");
+
+    refresh_panel("cgia", cgia_panel, cgia);
+
+    // Update the PGIA section.
+    pgia = data.pgia;
+    var pgia_panel = $("#pgia");
+
+    refresh_panel("pgia", pgia_panel, pgia);
+  };
+
+  $(document).ready(function() {
+    socket = new WebSocket("ws://" + window.location.host + "/ws");
+
+    socket.onerror = function(event) {
+      console.log("Connection to server failed.");
+    };
+
+    socket.onopen = function (event) {
+      console.log("Connection to server established.");
+
+      // Send the refresh command to the server to get the
+      // entire state of the demo.
+
+      var command = {
+        command: "refresh"
+      };
+
+      socket.send(JSON.stringify(command));
+    };
+
+    socket.onmessage = function(event) {
+      console.log("Message received.");
+      console.log(event.data);
+
+      var decoded_message = JSON.parse(event.data);
+      console.log(decoded_message);
+      switch(decoded_message.command) {
+        case "refresh":
+          console.log("Received refresh data from server.");
+          refresh(decoded_message.body);
+
+          if (!refresh_timer_interval_id) {
+            refresh_timer_interval_id = window.setInterval(refresh_times, 1000);
+          }
+
+          var refresh_command = {
+            command: "refresh"
+          };
+/*
+          setTimeout(socket.send.bind(socket, JSON.stringify(refresh_command)), 5000);
+*/
+          break;
+      }
+    };
+  });
+</script>

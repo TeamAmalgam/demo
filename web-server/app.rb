@@ -9,4 +9,12 @@ class App < Sinatra::Base
   get '/' do
     erb :"index"
   end
+
+  get '/race' do
+    erb :"race"
+  end
+
+  get '/editor' do
+    erb :"editor"
+  end
 end
