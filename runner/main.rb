@@ -45,7 +45,7 @@ Dir.mktmpdir do |dir|
     redis.set(algorithm, data.to_yaml)
     redis.publish(algorithm, nil)
 
-    IO.popen(["java", "-jar", "./moolloy.jar", "-s", "./model.als", :err => [:child, :out]]) do |io|
+    IO.popen(["java", "-jar", "./moolloy.jar", "-s", "--MooAlgorithm=#{algorithm.upcase}", "./model.als", :err => [:child, :out]]) do |io|
         io.each_line do |line|
             # Is this line saying we found a solution?
             match = /.*Found a solution.*\[([^\]]*)\].*/.match(line)
@@ -55,9 +55,10 @@ Dir.mktmpdir do |dir|
                     "cost" => metrics[0],
                     "performance" => metrics[1]
                 }
+
                 redis.set(algorithm, data.to_yaml)
                 redis.publish(algorithm, nil)
-                
+
                 puts "Found solution with metrics [#{metrics.join(", ")}]."
             end
 
@@ -71,6 +72,8 @@ Dir.mktmpdir do |dir|
                     "cost" => metrics[0],
                     "performance" => metrics[1]
                 }
+                data["pareto_points_found"] += 1
+
                 redis.set(algorithm, data.to_yaml)
                 redis.publish(algorithm, nil)
 

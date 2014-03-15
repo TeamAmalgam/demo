@@ -7,6 +7,10 @@
           <span class="label label-default">Running</span>
           <span class="time">10:02:03</span>
         </h2>
+        <div class="progress">
+          <div class="progress-bar" role="progressbar" style="width: 60%;">
+          </div>
+        </div>
         <div id="gia-graph" class="well">
           <svg class="chart" width="100%" height="100%">
           </svg>
@@ -22,6 +26,10 @@
           <span class="label label-default">Running</span>
           <span class="time">10:02:03</span>
         </h2>
+        <div class="progress">
+          <div class="progress-bar" role="progressbar" style="width: 60%;">
+          </div>
+        </div>
         <div id="cgia-graph" class="well">
           <svg class="chart" width="100%" height="100%">
           </svg>
@@ -37,6 +45,10 @@
           <span class="label label-success">Finished</span>
           <span class="time">10:02:03</span>
         </h2>
+        <div class="progress">
+          <div class="progress-bar" role="progressbar" style="width: 60%;">
+          </div>
+        </div>
         <div id="pgia-graph" class="well">
           <svg class="chart" width="100%" height="100%">
           </svg>
@@ -105,16 +117,24 @@
 
     refresh_panel_time(panel, data);
 
-    panel_status_label.removeClass("label-success label-default");
+    panel_status_label.removeClass("label-danger label-success label-default");
 
-    if (data.finished) {
+    if (data.finished && !data.errored) {
       panel_status_label.text("Finished");
       panel_status_label.addClass("label-success");
+    } else if (data.finished && data.errored) {
+      panel_status_label.text("Errored");
+      panel_status_label.addClass("label-danger");
     } else {
       panel_status_label.text("Running");
       panel_status_label.addClass("label-default");
     }
 
+    // Refresh the progress bar.
+    var progress = 100 * data.pareto_points_found / model.total_pareto_points;
+    console.log(progress);
+    var progress_bar = panel.find("div.progress-bar");
+    progress_bar.css("width", progress + "%")
     // Refresh the graph.
     var graph = d3.select("#" + panel_id + " svg");
 

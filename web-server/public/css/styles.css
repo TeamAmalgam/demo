@@ -9,3 +9,7 @@ circle.pareto-point {
 circle.solution {
     fill: blue;
 }
+
+circle.solution:last-child {
+    fill: green;
+}
