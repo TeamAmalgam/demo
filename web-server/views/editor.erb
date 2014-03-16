@@ -1,12 +1,14 @@
 <div class="row" style="height:400px">
   <div id="editor-pane" class="col-md-6">
     <div class="panel panel-default">
-      <div class="panel-heading"><h1>Model</h1></div>
+      <div class="panel-heading">
+        <h1>Model</h1>
+        <button form="editor-form" name="run" type="submit" class="btn btn-success btn-lg">
+          Run
+        </button>
+      </div>
       <div class="panel-body">
-        <form method="post" action="/editor/run">
-          <button name="run" type="submit" class="btn btn-success btn-lg">
-            Run
-          </button>
+        <form method="post" action="/editor/run" id="editor-form">
         <pre>
 abstract sig Contractor {
   value_units : set ValueUnit,
