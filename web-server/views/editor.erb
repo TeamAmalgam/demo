@@ -1,0 +1,190 @@
+<div class="row" style="height:400px">
+  <div id="editor-pane" class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading"><h1>Model</h1></div>
+      <div class="panel-body">
+        <form method="post" action="/editor/run">
+          <button name="run" type="submit" class="btn btn-success btn-lg">
+            Run
+          </button>
+        <pre>
+abstract sig Contractor {
+  value_units : set ValueUnit,
+  experience_values : ValueUnit -> Int,
+  financial_stability_values : ValueUnit -> Int
+}
+
+abstract sig ValueUnit {
+  contractor : one Contractor,
+  experience_value : Int,
+  financial_stability_value : Int
+}
+{
+  experience_value = contractor.experience_values[this]
+  financial_stability_value = contractor.financial_stability_values[this]
+}
+
+one sig VU1, VU2, VU3, VU4, VU5 extends ValueUnit {
+
+}
+
+one sig Bob extends Contractor {
+}
+{
+  experience_values = 
+    VU1 -> <input type="number" value="1" min="0" max="50" name="bob[experience][vu1]"> +
+    VU2 -> <input type="number" value="2" min="0" max="50" name="bob[experience][vu2]"> +
+    VU3 -> <input type="number" value="3" min="0" max="50" name="bob[experience][vu3]"> +
+    VU4 -> <input type="number" value="4" min="0" max="50" name="bob[experience][vu4]"> +
+    VU5 -> <input type="number" value="5" min="0" max="50" name="bob[experience][vu5]">
+
+  financial_stability_values =
+    VU1 -> <input type="number" value="5" min="0" max="50" name="bob[financial][vu1]"> +
+    VU2 -> <input type="number" value="4" min="0" max="50" name="bob[financial][vu2]"> +
+    VU3 -> <input type="number" value="3" min="0" max="50" name="bob[financial][vu3]"> +
+    VU4 -> <input type="number" value="2" min="0" max="50" name="bob[financial][vu4]"> +
+    VU5 -> <input type="number" value="1" min="0" max="50" name="bob[financial][vu5]">
+}
+
+one sig Wendy extends Contractor {
+}
+{
+  experience_values = 
+    VU1 -> <input type="number" value="5" min="0" max="50" name="wendy[experience][vu1]"> +
+    VU2 -> <input type="number" value="4" min="0" max="50" name="wendy[experience][vu2]"> +
+    VU3 -> <input type="number" value="3" min="0" max="50" name="wendy[experience][vu3]"> +
+    VU4 -> <input type="number" value="2" min="0" max="50" name="wendy[experience][vu4]"> +
+    VU5 -> <input type="number" value="1" min="0" max="50" name="wendy[experience][vu5]">
+
+  financial_stability_values =
+    VU1 -> <input type="number" value="1" min="0" max="50" name="wendy[financial][vu1]"> +
+    VU2 -> <input type="number" value="2" min="0" max="50" name="wendy[financial][vu2]"> +
+    VU3 -> <input type="number" value="3" min="0" max="50" name="wendy[financial][vu3]"> +
+    VU4 -> <input type="number" value="4" min="0" max="50" name="wendy[financial][vu4]"> +
+    VU5 -> <input type="number" value="5" min="0" max="50" name="wendy[financial][vu5]">
+}
+
+one sig Problem {
+  experience_total : Int,
+  financial_stability_total : Int
+}
+{
+  experience_total = (sum vu : ValueUnit | vu.experience_value)
+  financial_stability_total = (sum vu : ValueUnit | vu.financial_stability_value)
+}
+
+fact { all vu : ValueUnit | one cm : Contractor | vu in cm.value_units }
+fact { value_units = ~(contractor) }
+
+inst config {
+  10 Int
+}
+
+objectives o_global {
+  maximize Problem.experience_total,
+  maximize Problem.financial_stability_total
+}
+
+pred show {
+}
+
+run show for config optimize o_global
+</pre>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div id="editor-results" class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading"><h1>Results</h1></div>
+      <div class="panel-body">
+        <h2>
+          <span class="label label-default">Running</span>
+          <span class="time">10:02:03</span>
+        </h2>
+        <div class="progress" style="display: none;">
+          <div class="progress-bar" role="progressbar" style="width: 60%;">
+          </div>
+        </div>
+        <div id="editor-results-graph" class="well">
+          <svg class="chart" width="100%" height="100%">
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  refresh_timer_interval_id = null;
+
+  refresh_times = function() {
+    var results_panel = $("#editor-results");
+    refresh_panel_time(results_panel, results);
+  };
+
+
+  refresh = function(data) {
+    console.log("refreshing");
+
+    // Update the global model information.
+    model = {
+      model_name: data.model_name,
+      total_pareto_points: data.total_pareto_points,
+      metrics: data.metrics,
+      metric_directions: data.metric_directions,
+      metric_maximums: data.metric_maximums
+    };
+
+    // Update the results section.
+    results = data.results;
+    var editor_results_panel = $("#editor-results");
+
+    refresh_panel("editor-results", editor_results_panel, results);
+  };
+
+  $(document).ready(function() {
+    socket = new WebSocket("ws://" + window.location.host + "/ws/editor");
+
+    socket.onerror = function(event) {
+      console.log("Connection to server failed.");
+    };
+
+    socket.onopen = function (event) {
+      console.log("Connection to server established.");
+
+      // Send the refresh command to the server to get the
+      // entire state of the demo.
+
+      var command = {
+        command: "refresh-editor"
+      };
+
+      socket.send(JSON.stringify(command));
+    };
+
+    socket.onmessage = function(event) {
+      console.log("Message received.");
+      console.log(event.data);
+
+      var decoded_message = JSON.parse(event.data);
+      console.log(decoded_message);
+      switch(decoded_message.command) {
+        case "refresh-editor":
+          console.log("Received refresh data from server.");
+          refresh(decoded_message.body);
+
+          if (!refresh_timer_interval_id) {
+            refresh_timer_interval_id = window.setInterval(refresh_times, 1000);
+          }
+
+          var refresh_command = {
+            command: "refresh-editor"
+          };
+/*
+          setTimeout(socket.send.bind(socket, JSON.stringify(refresh_command)), 5000);
+*/
+          break;
+      }
+    };
+  });
+</script>

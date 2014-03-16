@@ -9,6 +9,7 @@ gem "rack-contrib"
 gem "websocket-rack"
 gem "sinatra-contrib"
 gem "em-hiredis"
+gem "redis"
 
 group :development do
   gem "shotgun"

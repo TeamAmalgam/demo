@@ -105,7 +105,7 @@
   };
 
   $(document).ready(function() {
-    socket = new WebSocket("ws://" + window.location.host + "/ws");
+    socket = new WebSocket("ws://" + window.location.host + "/ws/race");
 
     socket.onerror = function(event) {
       console.log("Connection to server failed.");
